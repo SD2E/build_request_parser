@@ -1,6 +1,14 @@
 #!/usr/bin/env python
 """
 by: Robert C. Moseley
+
+Python function for parsing a SD2 Build Request excel sheet
+
+Usage for submitting to SynBioHub Staging server:
+python build_request_parser.py -br <path_to_build_request> -u <sd2e_username> -p <sd2e_password>
+
+Usage for submitting to SynBioHub Production server:
+python build_request_parser.py -br <path_to_build_request> -u <sd2e_username> -p <sd2e_password> -s False
 """
 import pandas as pd
 import argparse
@@ -9,11 +17,13 @@ import sbol
 
 def sbh_login(SBH_USER, SBH_PASSWORD, spoof_bool, parts_doc):
 
+    # submit to staging server
     if spoof_bool:
         sbh_server = sbol.PartShop('https://hub-staging.sd2e.org')
         sbh_server.spoof("https://hub.sd2e.org")
         sbol.setHomespace('https://hub-staging.sd2e.org/user/sd2e/{collection}'.format(
             collection=parts_doc.displayId))
+    # submit to production server
     else:
         sbh_server = sbol.PartShop('https://hub.sd2e.org')
         sbol.setHomespace('https://hub.sd2e.org/user/sd2e/{collection}'.format(
@@ -26,6 +36,7 @@ def sbh_login(SBH_USER, SBH_PASSWORD, spoof_bool, parts_doc):
 
 def make_parts_doc(build_request):
 
+    # create SBOL document
     parts_doc = sbol.Document()
 
     collection_name = build_request.loc['Collection Name:'].iloc[:1][1].values[0]
@@ -39,24 +50,31 @@ def make_parts_doc(build_request):
 
 def parse_parts_to_sbh(build_request, ontology_terms, parts_doc):
 
+    # parse excel doc for only parts and create parts dataframe
     parts_df = build_request.loc['Part Name':'Composite DNA Parts']
     parts_df.columns = parts_df.iloc[0]
     parts_df = parts_df.drop(parts_df.index[0])
     parts_df = parts_df.loc[parts_df.index.dropna()]
     parts_df = parts_df.drop(['Composite DNA Parts'])
 
+    # iterate over parts dataframe
     for part_name, part_info in parts_df.iterrows():
         part_displayid = '_'.join(part_name.split(' '))
+        # create part component definition
         part_cd = sbol.ComponentDefinition(part_displayid, sbol.BIOPAX_DNA)
         part_cd.name = part_name
         part_cd.description = part_info['Description (Optional)']
 
+        # check if Role for part is given
         if not pd.isnull(part_info['Role']):
             if part_info['Role'] in ontology_terms.index:
+                # grab role uri from ontology term excel sheet
                 role_uri = ontology_terms.loc[part_info['Role']].values[0]
                 part_cd.roles = part_cd.roles + [role_uri]
 
+        # check if Sequence for is given
         if not pd.isnull(part_info['Sequence']):
+            # add sequence information to part component definition
             part_seq = sbol.Sequence('{}_sequence'.format(part_cd.displayId), part_info['Sequence'])
             part_cd.sequence = part_seq
 
@@ -64,6 +82,16 @@ def parse_parts_to_sbh(build_request, ontology_terms, parts_doc):
 
 
 if __name__ == '__main__':
+    """
+    build_request_parser requires as input a build Request excel sheet.  
+    Command-line parameters which are required include:
+        -br, --build_request_excel: the path and file of the Build Request excel sheet
+        -u, --sbh_username: SD2 username for accessing SynBioHub servers
+        -p, --sbh_password: SD2 password for accessing SynBioHub servers
+    Command-line parameters which may be optionally specified include:
+        -s, --spoof: bool specifying which server to use: True = Staging Server, False = Production Server 
+                    (default: True)
+    """
 
     arg_parser = argparse.ArgumentParser(prog='Build Request Parser',
                                          description='Parses Build Request excel document for DNA parts and submits to SynBioHub')
