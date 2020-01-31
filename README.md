@@ -19,7 +19,7 @@ $ python build_request_parser.py -br <path_to_build_request> -u <sd2e_username> 
 ```
 
 ## Running BuildRequest_SBH_upload notebook
-Notebook can be used for testing submissions as it is set up to submit to SynBioHun Staging server.
+Notebook can be used for testing submissions as it is set up to submit to SynBioHub Staging server.
 To use, you must:
 - add sd2e username and password
 - add path to a Build Request excel sheet
