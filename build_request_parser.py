@@ -14,6 +14,7 @@ import pandas as pd
 import argparse
 import sbol
 
+sbol.Config.setOption('sbol_typed_uris', False)
 
 def sbh_login(SBH_USER, SBH_PASSWORD, spoof_bool, parts_doc):
 
@@ -72,11 +73,19 @@ def parse_parts_to_sbh(build_request, ontology_terms, parts_doc):
                 role_uri = ontology_terms.loc[part_info['Role']].values[0]
                 part_cd.roles = part_cd.roles + [role_uri]
 
-        # check if Sequence for is given
+        # check if Sequence for part is given
         if not pd.isnull(part_info['Sequence']):
             # add sequence information to part component definition
             part_seq = sbol.Sequence('{}_sequence'.format(part_cd.displayId), part_info['Sequence'])
             part_cd.sequence = part_seq
+
+        # TODO: Fix adding Source information
+        # This doesn't seem to work
+        # check if Source for part is given
+        if not pd.isnull(part_info['Source (Optional)']):
+            # add source information to part component definition
+            part_source = part_info['Source (Optional)']
+            part_cd.Source = part_source
 
         parts_doc.addComponentDefinition(part_cd)
 
@@ -136,4 +145,4 @@ if __name__ == '__main__':
     parse_parts_to_sbh(build_request, ontology_terms, parts_doc)
 
     # submit parts Document to SBH server
-    sbh_server.submit(parts_doc, sbol.getHomespace(), 0)
+    sbh_server.submit(parts_doc, sbol.getHomespace(), 1)
