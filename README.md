@@ -6,6 +6,9 @@ Parses Build Request excel sheet and uploads DNA parts and their respective info
 
 ```
 $ git clone https://gitlab.sd2e.org/rmoseley/build_request_parser.git
+$ cd build_request_parser
+$ conda env create -f conda_env.yml
+$ source activate br_parser
 ```
 
 ## Running build_request_parser.py in the command line

@@ -1,0 +1,15 @@
+name: br_parser
+channels:
+- defaults
+dependencies:
+    - python = 3.7
+    - pip
+    - pytest = 5.0.0
+    - numpy
+    - pandas = 0.24
+
+    - pip:
+      - pytest-html
+      - pytest-timeout
+      - sbol2
+      - xlrd
