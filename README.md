@@ -20,9 +20,3 @@ $ python build_request_parser.py -br <path_to_build_request> -u <sd2e_username> 
 ```
 $ python build_request_parser.py -br <path_to_build_request> -u <sd2e_username> -p <sd2e_password> -s False
 ```
-
-## Running BuildRequest_SBH_upload notebook
-Notebook can be used for testing submissions as it is set up to submit to SynBioHub Staging server.
-To use, you must:
-- add sd2e username and password
-- add path to a Build Request excel sheet
