@@ -13,19 +13,22 @@ python build_request_parser.py -br <path_to_build_request> -u <sd2e_username> -p
 import pandas as pd
 import argparse
 import sbol2 as sbol
-import distutils.util
 
 sbol.Config.setOption('sbol_typed_uris', False)
 
-def sbh_login(SBH_USER, SBH_PASSWORD, spoof_bool):
+def sbh_login(SBH_USER, SBH_PASSWORD, spoof_bool, parts_doc):
 
     # submit to staging server
-    if spoof_bool == True:
+    if spoof_bool:
         sbh_server = sbol.PartShop('https://hub-staging.sd2e.org')
         sbh_server.spoof("https://hub.sd2e.org")
+        sbol.setHomespace('https://hub-staging.sd2e.org/user/sd2e/{collection}'.format(
+            collection=parts_doc.displayId))
     # submit to production server
-    elif spoof_bool == False:
+    else:
         sbh_server = sbol.PartShop('https://hub.sd2e.org')
+        sbol.setHomespace('https://hub.sd2e.org/user/sd2e/{collection}'.format(
+            collection=parts_doc.displayId))
 
     sbh_server.login(SBH_USER, SBH_PASSWORD)
 
@@ -42,9 +45,6 @@ def make_parts_doc(build_request):
     parts_doc.displayId = '_'.join(collection_name.split(' '))
     collection_desc = build_request.loc['Design Description':].iloc[1:2].index[0]
     parts_doc.description = collection_desc
-
-    sbol.setHomespace('http://build-design-parser.org/{collection}'.format(
-        collection=parts_doc.displayId))
 
     return parts_doc
 
@@ -108,21 +108,19 @@ if __name__ == '__main__':
     # - command-line arguments -
     arg_parser.add_argument('-br', '--build_request_excel',
                         action='store',
-                        type=str,
                         required=True,
                         help='full path to build request excel document')
     arg_parser.add_argument('-u', '--sbh_username',
                         action='store',
-                        type=str,
                         required=True,
                         help='SD2 SynBioHub username')
     arg_parser.add_argument('-p', '--sbh_password',
                         action='store',
-                        type=str,
                         required=True,
                         help='SD2 SynBioHub password')
     arg_parser.add_argument('-s', '--spoof',
-                        type=lambda x: bool(distutils.util.strtobool(x)),
+                        action='store',
+                        type=bool,
                         default=True,
                         help='Default submits DNA parts to SynBioHub staging server. Set to False to submit to SynBioHub production server.')
     args = arg_parser.parse_args()
@@ -141,7 +139,7 @@ if __name__ == '__main__':
     parts_doc = make_parts_doc(build_request)
 
     # connect to SBH server and set Homespace
-    sbh_server = sbh_login(SBH_USER, SBH_PASSWORD, spoof_bool)
+    sbh_server = sbh_login(SBH_USER, SBH_PASSWORD, spoof_bool, parts_doc)
 
     # parse build request and add parts to parts Document
     parse_parts_to_sbh(build_request, ontology_terms, parts_doc)
